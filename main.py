@@ -1,13 +1,20 @@
+import json
 import os.path
+from pathlib import Path
 
 import torch
-from torch.utils.data import TensorDataset, RandomSampler, DataLoader, DistributedSampler
+from torch import nn
+from torch.utils.data import TensorDataset, RandomSampler, DataLoader, DistributedSampler, SequentialSampler
 from transformers import AdamW, get_linear_schedule_with_warmup
+
+import myUtils
 from args import Args
 
 import args
 from callback.progressbar import ProgressBar
+from metrics.ner_metrics import SeqEntityScore
 from processor import Processor, convert_examples_to_features, collate_fn
+from processors.utils_ner import get_entities
 
 
 def load_and_cache_examples(args, tokenizer, data_type='train'):
@@ -46,7 +53,7 @@ def load_and_cache_examples(args, tokenizer, data_type='train'):
 def train(args, train_dataset, model, tokenizer):
     """ Train the model """
     train_sampler = RandomSampler(train_dataset)
-    train_dataloader = DataLoader(train_dataset, sampler=train_sampler, batch_size=args.train_batch_size,
+    train_dataloader = DataLoader(train_dataset, sampler=train_sampler, batch_size=args.batch_size,
                                   collate_fn=collate_fn)
     if args.max_steps > 0:
         t_total = args.max_steps
@@ -118,14 +125,117 @@ def train(args, train_dataset, model, tokenizer):
             torch.cuda.empty_cache()
     return global_step, tr_loss / global_step
 
+def evaluate(args, model, tokenizer, prefix=""):
+    metric = SeqEntityScore(args.id2label)
+    eval_output_dir = args.output_dir
+    if not os.path.exists(eval_output_dir) and args.local_rank in [-1, 0]:
+        os.makedirs(eval_output_dir)
+    eval_dataset = load_and_cache_examples(args, tokenizer, data_type='dev')
+    args.eval_batch_size = args.batch_size
+    # Note that DistributedSampler samples randomly
+    eval_sampler = SequentialSampler(eval_dataset)
+    eval_dataloader = DataLoader(eval_dataset, sampler=eval_sampler, batch_size=args.eval_batch_size,
+                                 collate_fn=collate_fn)
+    # Eval!
+    eval_loss = 0.0
+    nb_eval_steps = 0
+    pbar = ProgressBar(n_total=len(eval_dataloader), desc="Evaluating")
+    if isinstance(model, nn.DataParallel):
+        model = model.module
+    for step, batch in enumerate(eval_dataloader):
+        model.eval()
+        batch = tuple(t.to(args.device) for t in batch)
+        with torch.no_grad():
+            inputs = {"input_ids": batch[0], "attention_mask": batch[1], "labels": batch[3]}
+            if args.model_type != "distilbert":
+                # XLM and RoBERTa don"t use segment_ids
+                inputs["token_type_ids"] = (batch[2] if args.model_type in ["bert", "xlnet"] else None)
+            outputs = model(**inputs)
+            tmp_eval_loss, logits = outputs[:2]
+            tags = model.crf.decode(logits, inputs['attention_mask'])
+        if args.n_gpu > 1:
+            tmp_eval_loss = tmp_eval_loss.mean()  # mean() to average on multi-gpu parallel evaluating
+        eval_loss += tmp_eval_loss.item()
+        nb_eval_steps += 1
+        out_label_ids = inputs['labels'].cpu().numpy().tolist()
+        input_lens = batch[4].cpu().numpy().tolist()
+        tags = tags.squeeze(0).cpu().numpy().tolist()
+        for i, label in enumerate(out_label_ids):
+            temp_1 = []
+            temp_2 = []
+            for j, m in enumerate(label):
+                if j == 0:
+                    continue
+                elif j == input_lens[i] - 1:
+                    metric.update(pred_paths=[temp_2], label_paths=[temp_1])
+                    break
+                else:
+                    temp_1.append(args.id2label[out_label_ids[i][j]])
+                    temp_2.append(args.id2label[tags[i][j]])
+        pbar(step)
+    print('\n')
+    eval_loss = eval_loss / nb_eval_steps
+    eval_info, entity_info = metric.result()
+    results = {f'{key}': value for key, value in eval_info.items()}
+    results['loss'] = eval_loss
+    print(f"***** Eval results {prefix} *****")
+    info = "-".join([f' {key}: {value:.4f} ' for key, value in results.items()])
+    print(info)
+    print(f"***** Entity results {prefix} *****")
+    for key in sorted(entity_info.keys()):
+        print(f"******* {key} results ********")
+        info = "-".join([f' {key}: {value:.4f} ' for key, value in entity_info[key].items()])
+        print(info)
+    return results
+
+def predict(args, model, tokenizer, prefix=""):
+    pred_output_dir = args.output_dir
+    if not os.path.exists(pred_output_dir) and args.local_rank in [-1, 0]:
+        os.makedirs(pred_output_dir)
+    test_dataset = load_and_cache_examples(args, tokenizer, data_type='test')
+    # Note that DistributedSampler samples randomly
+    test_sampler = SequentialSampler(test_dataset)
+    test_dataloader = DataLoader(test_dataset, sampler=test_sampler, batch_size=1, collate_fn=collate_fn)
+    # Eval!
+    results = []
+    output_predict_file = os.path.join(pred_output_dir, prefix, "test_prediction.json")
+    pbar = ProgressBar(n_total=len(test_dataloader), desc="Predicting")
+
+    if isinstance(model, nn.DataParallel):
+        model = model.module
+    for step, batch in enumerate(test_dataloader):
+        model.eval()
+        batch = tuple(t.to(args.device) for t in batch)
+        with torch.no_grad():
+            inputs = {"input_ids": batch[0], "attention_mask": batch[1], "labels": None}
+            if args.model_type != "distilbert":
+                # XLM and RoBERTa don"t use segment_ids
+                inputs["token_type_ids"] = (batch[2] if args.model_type in ["bert", "xlnet"] else None)
+            outputs = model(**inputs)
+            logits = outputs[0]
+            tags = model.crf.decode(logits, inputs['attention_mask'])
+            tags  = tags.squeeze(0).cpu().numpy().tolist()
+        preds = tags[0][1:-1]  # [CLS]XXXX[SEP]
+        label_entities = get_entities(preds, args.id2label)
+        json_d = {}
+        json_d['id'] = step
+        json_d['tag_seq'] = " ".join([args.id2label[x] for x in preds])
+        json_d['entities'] = label_entities
+        results.append(json_d)
+        pbar(step)
+    print('\n')
+    with open(output_predict_file, "w") as writer:
+        for record in results:
+            writer.write(json.dumps(record) + '\n')
+
 
 def main():
     args = Args()
     args.device = torch.device("cuda" if torch.cuda.is_available() and not args.no_cuda else "cpu")
 
     label_list = args.label_list
-    id2label = {i: label for i, label in enumerate(label_list)}
-    label2id = {label: i for i, label in enumerate(label_list)}
+    args.id2label = {i: label for i, label in enumerate(label_list)}
+    args.label2id = {label: i for i, label in enumerate(label_list)}
     num_labels = len(label_list)
 
     config_class, model_class, tokenizer_class = args.config_class, args.model_class, args.tokenizer_class
@@ -134,7 +244,7 @@ def main():
     model = model_class.from_pretrained(args.model_name_or_path, config=config)
     model.to(args.device)
 
-    if args.task == "do_train":
+    if args.do_train:
         train_dataset = load_and_cache_examples(args, tokenizer, data_type='train')
         global_step, tr_loss = train(args, train_dataset, model, tokenizer)
         if not os.path.exists(args.output_dir):
@@ -144,6 +254,59 @@ def main():
         tokenizer.save_vocabulary(args.output_dir)
         # Good practice: save your training arguments together with the trained model
         torch.save(args, os.path.join(args.output_dir, "training_args.bin"))
+
+    results = {}
+    if args.do_eval:
+        tokenizer = tokenizer_class.from_pretrained(args.output_dir)
+        checkpoints = [args.output_dir]
+        for checkpoint in checkpoints:
+            global_step = checkpoint.split("-")[-1] if len(checkpoints) > 1 else ""
+            prefix = checkpoint.split('/')[-1] if checkpoint.find('checkpoint') != -1 else ""
+            model = model_class.from_pretrained(checkpoint, config=config)
+            model.to(args.device)
+            result = evaluate(args, model, tokenizer, prefix=prefix)
+            if global_step:
+                result = {"{}_{}".format(global_step, k): v for k, v in result.items()}
+            results.update(result)
+        output_eval_file = os.path.join(args.output_dir, "eval_results.txt")
+        with open(output_eval_file, "w") as writer:
+            for key in sorted(results.keys()):
+                writer.write("{} = {}\n".format(key, str(results[key])))
+
+    if args.do_predict:
+        tokenizer = tokenizer_class.from_pretrained(args.output_dir)
+        checkpoints = [args.output_dir]
+        for checkpoint in checkpoints:
+            prefix = checkpoint.split('/')[-1] if checkpoint.find('checkpoint') != -1 else ""
+            model = model_class.from_pretrained(checkpoint, config=config)
+            model.to(args.device)
+            predict(args, model, tokenizer, prefix=prefix)
+
+    if args.do_console_predict:
+        tokenizer = tokenizer_class.from_pretrained(args.output_dir)
+        model = model_class.from_pretrained("output", config=config)
+        raw_str = input("input:")
+        pred_dataset = myUtils.process_article(raw_str, args, tokenizer, 128)
+        pred_sampler = SequentialSampler(pred_dataset)
+        pred_dataloader = DataLoader(pred_dataset, sampler=pred_sampler, batch_size=1, collate_fn=collate_fn)
+
+        # predict
+        for step,batch in enumerate(pred_dataloader):
+            model.eval()
+            batch = tuple(t.to(args.device) for t in batch)
+            with torch.no_grad():
+                inputs = {"input_ids": batch[0], "attention_mask": batch[1], "labels": None}
+                inputs["token_type_ids"] = (batch[2] if args.model_type in ["bert", "xlnet"] else None)
+                outputs = model(**inputs)
+                logits = outputs[0]
+                tags = model.crf.decode(logits, inputs['attention_mask'])
+                tags = tags.squeeze(0).cpu().numpy().tolist()
+            preds = tags[0][1:-1]  # [CLS]XXXX[SEP]
+            label_entities = get_entities(preds, args.id2label, 'bios')
+            print(label_entities)
+
+
+
 
 if __name__ == "__main__":
     main()

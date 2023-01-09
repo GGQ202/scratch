@@ -63,16 +63,16 @@ class Processor():
         return self._create_example(self._read_text(os.path.join(data_path, "train.char.bmes")), "train")
 
     def get_dev_examples(self, data_path):
-        return self._create_example(self._read_text(data_path), "dev")
+        return self._create_example(self._read_text(os.path.join(data_path, "dev.char.bmes")), "dev")
 
     def get_test_examples(self, data_path):
-        return self._create_example(self._read_text(data_path), "test")
+        return self._create_example(self._read_text(os.path.join(data_path, "test.char.bmes")), "test")
 
     def _create_example(self, lines, set_type):
         examples = []
         for (i, line) in enumerate(lines):
-            if i == 0:
-                continue
+            # if i == 0:
+            #     continue
             guid = "%s-%s" % (set_type, i)
             text_a = line['words']
             # BIOS
