@@ -18,9 +18,9 @@
 出 O
 土 O
 的 O
-6 B_num
-3 I_num
-0 I_num
+6 O
+3 O
+0 O
 多 O
 个 O
 刻 B_symbol
@@ -193,9 +193,9 @@
 出 O
 土 O
 的 O
-6 B_num
-3 I_num
-0 I_num
+6 O
+3 O
+0 O
 多 O
 个 O
 符 B_symbol
@@ -412,11 +412,11 @@
 出 O
 土 O
 的 O
-6 B_num
-0 I_num
-0 I_num
-余 I_num
-件 I_num
+6 O
+0 O
+0 O
+余 O
+件 O
 刻 B_symbol
 划 I_symbol
 符 I_symbol
@@ -439,9 +439,9 @@
 已 O
 接 O
 近 O
-9 B_num
-0 I_num
-件 I_num
+9 O
+0 O
+件 O
 ， O
 
 占 O
@@ -450,10 +450,10 @@
 比 O
 例 O
 的 O
-六 B_num
-分 I_num
-之 I_num
-一 I_num
+六 O
+分 O
+之 O
+一 O
 。 O
 
 渔 B_culture
@@ -504,9 +504,9 @@
 号 I_symbol
 中 O
 的 O
-大 B_num
-部 I_num
-分 I_num
+大 O
+部 O
+分 O
 内 O
 容 O
 都 O
