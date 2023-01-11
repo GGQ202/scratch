@@ -1,5 +1,7 @@
 import copy
 import re
+from collections import OrderedDict
+from collections.abc import Set
 
 import torch
 from torch.utils.data import TensorDataset
@@ -43,3 +45,18 @@ def process_article(article, args, tokenizer, max_seq_length,
     all_label_ids = torch.ones_like(all_input_ids)
     dataset = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_lens, all_label_ids)
     return dataset, tokens_list
+
+def search_labels(file_path):
+    dict = set()
+    with open(file_path, 'r') as f:
+        for line in f:
+            parts = line.split()
+            if len(parts) == 2:
+                dict.add(parts[1])
+    return list(dict)
+
+if __name__ == '__main__':
+    res = search_labels('datasets/NERdata/dev_char_bmes.txt')
+    target_f = open('temp.txt', 'w')
+    print(res, file=target_f)
+    target_f.close()
