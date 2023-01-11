@@ -288,7 +288,7 @@ def main():
         model.to(args.device)
         while True:
             raw_str = input("input:")
-            pred_dataset = myUtils.process_article(raw_str, args, tokenizer, 128)
+            pred_dataset, tokens_list = myUtils.process_article(raw_str, args, tokenizer, 128)
             pred_sampler = SequentialSampler(pred_dataset)
             pred_dataloader = DataLoader(pred_dataset, sampler=pred_sampler, batch_size=1, collate_fn=collate_fn)
 
@@ -305,6 +305,9 @@ def main():
                     tags = tags.squeeze(0).cpu().numpy().tolist()
                 preds = tags[0][1:-1]  # [CLS]XXXX[SEP]
                 label_entities = get_entities(preds, args.id2label, 'bios')
+                for entity in label_entities:
+                    entity_str = tokens_list[step][entity[1]:entity[2]+1]
+                    print(f"{entity[0]}:{entity_str}")
                 print(label_entities)
 
 

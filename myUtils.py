@@ -1,3 +1,4 @@
+import copy
 import re
 
 import torch
@@ -10,10 +11,12 @@ def process_article(article, args, tokenizer, max_seq_length,
                     sep_token='[SEP]', cls_token='[CLS]', sequence_a_segment_id=0, pad_token=0):
     sentences = re.split(r"[。？！ ；!?]", article)
     features = []
+    tokens_list = []
     for sentence in sentences:
         if sentence == "":
             continue
         tokens = tokenizer.tokenize(sentence)
+        tokens_list.append(copy.deepcopy(tokens))
         tokens += [sep_token]
         tokens = [cls_token] + tokens
         segment_ids = [sequence_a_segment_id] * len(tokens)
@@ -39,4 +42,4 @@ def process_article(article, args, tokenizer, max_seq_length,
     all_lens = torch.tensor([f.input_len for f in features], dtype=torch.long)
     all_label_ids = torch.ones_like(all_input_ids)
     dataset = TensorDataset(all_input_ids, all_input_mask, all_segment_ids, all_lens, all_label_ids)
-    return dataset
+    return dataset, tokens_list
