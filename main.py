@@ -305,10 +305,18 @@ def main():
                     tags = tags.squeeze(0).cpu().numpy().tolist()
                 preds = tags[0][1:-1]  # [CLS]XXXX[SEP]
                 label_entities = get_entities(preds, args.id2label, 'bios')
+                sentence = ""
+                for token in tokens_list[step]:
+                    sentence += token
+                print(f"sentence: {sentence}")
+                print(f"entities:{label_entities}")
                 for entity in label_entities:
-                    entity_str = tokens_list[step][entity[1]:entity[2]+1]
-                    print(f"{entity[0]}:{entity_str}")
-                print(label_entities)
+                    entity_tokens = tokens_list[step][entity[1]:entity[2]+1]
+                    entity_str = ""
+                    for ch in entity_tokens:
+                        entity_str += ch
+                    print(f"[{entity[0]}]:{entity_str}  {entity_tokens}")
+                print('')
 
 
 
