@@ -22,7 +22,7 @@ class Args:
                   'B_feature', 'I_department', 'B_department', 'I_drug',
                  'B_test', 'B_treatment', 'I_time', 'B_time', 'I_feature',
                  'B_body', 'O', 'I_body', 'I_physiology', 'B_physiology',
-                 'I_test', 'B_disease', 'I_treatment', 'I_symptom'], '[START]', '[END]']
+                 'I_test', 'B_disease', 'I_treatment', 'I_symptom', '[START]', '[END]']]
         self.label_list = label[2]
 
         self.config_class = BertConfig
