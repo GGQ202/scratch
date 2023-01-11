@@ -180,7 +180,7 @@ class CnerProcessor(DataProcessor):
 
     def get_train_examples(self, data_dir):
         """See base class."""
-        return self._create_examples(self._read_text(os.path.join(data_dir, "train.char.bmes")), "train")
+        return self._create_examples(self._read_text(os.path.join(data_dir, "TEMP_train.char.bmes")), "train")
 
     def get_dev_examples(self, data_dir):
         """See base class."""

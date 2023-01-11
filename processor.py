@@ -60,7 +60,7 @@ class Processor():
         pass
 
     def get_train_examples(self, data_path):
-        return self._create_example(self._read_text(os.path.join(data_path, "train.char.bmes")), "train")
+        return self._create_example(self._read_text(os.path.join(data_path, "TEMP_train.char.bmes")), "train")
 
     def get_dev_examples(self, data_path):
         return self._create_example(self._read_text(os.path.join(data_path, "dev.char.bmes")), "dev")
@@ -127,6 +127,10 @@ def convert_examples_to_features(examples, label_list, max_seq_length, tokenizer
         if isinstance(example.text_a, list):
             example.text_a = " ".join(example.text_a)
         tokens = tokenizer.tokenize(example.text_a)
+        if len(tokens) != len(example.labels):
+            gap = len(example.labels) - len(tokens)
+            for i in range(gap):
+                tokens.append('_')
         label_ids = [label_map[x] for x in example.labels]
         # Account for [CLS] and [SEP] with "- 2".
         special_tokens_count = 2

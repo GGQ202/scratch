@@ -21,9 +21,9 @@ class Args:
                 ['I_disease', 'B_symptom', 'B_drug', 'I_crowd', 'B_crowd',
                   'B_feature', 'I_department', 'B_department', 'I_drug',
                  'B_test', 'B_treatment', 'I_time', 'B_time', 'I_feature',
-                 'B_body', 'O', 'I_body', 'I_physiology', 'B_physiology',
-                 'I_test', 'B_disease', 'I_treatment', 'I_symptom', '[START]', '[END]']]
-        self.label_list = label[2]
+                 'B_body', 'I_body', 'I_physiology', 'B_physiology',
+                 'I_test', 'B_disease', 'I_treatment', 'I_symptom', 'O', '[START]', '[END]']]
+        self.label_list = label[0]
 
         self.config_class = BertConfig
         self.model_class = BertCrfForNer
@@ -35,7 +35,7 @@ class Args:
         self.batch_size = 8
         self.num_train_epochs = None
         self.model_name_or_path = 'prev_trained_model/bert-base-chinese'
-        self.data_dir = "./datasets/mydata"
+        self.data_dir = "./datasets/poor_cner"
         self.output_dir = "output"
         self.train_max_seq_length = 128
         self.eval_max_seq_length = 512
