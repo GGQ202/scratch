@@ -11,15 +11,14 @@ class Args:
         self.no_cuda = True if self.platform=='windows' else False
         self.device = None
         self.n_gpu = torch.cuda.device_count()
-        label_choose = 1
-        self.label_list =   ["X", 'B-CONT', 'B-EDU', 'B-LOC', 'B-NAME', 'B-ORG', 'B-PRO', 'B-RACE', 'B-TITLE',
-                           'I-CONT', 'I-EDU', 'I-LOC', 'I-NAME', 'I-ORG', 'I-PRO', 'I-RACE', 'I-TITLE',
-                           'O', 'S-NAME', 'S-ORG', 'S-RACE', "[START]", "[END]"]\
-                        if label_choose == 1 else\
-                            ['B_time', 'I_time', 'B_place', 'I_place', 'B_person', 'I_person',
-                             'B_num', 'I_num', 'B_culture', 'I_culture', 'B_symbol', 'I_symbol',
-                             'B_direct', 'I_direct', 'B_func', 'I_func', 'B_act', 'I_act',
-                             'B_obj', 'I_obj', 'O', '[START]', '[END]']
+        label = [["X", 'B-CONT', 'B-EDU', 'B-LOC', 'B-NAME', 'B-ORG', 'B-PRO', 'B-RACE', 'B-TITLE',
+              'I-CONT', 'I-EDU', 'I-LOC', 'I-NAME', 'I-ORG', 'I-PRO', 'I-RACE', 'I-TITLE',
+              'O', 'S-NAME', 'S-ORG', 'S-RACE', "[START]", "[END]"],
+              ['B_time', 'I_time', 'B_place', 'I_place', 'B_person', 'I_person',
+              'B_num', 'I_num', 'B_culture', 'I_culture', 'B_symbol', 'I_symbol',
+              'B_direct', 'I_direct', 'B_func', 'I_func', 'B_act', 'I_act',
+              'B_obj', 'I_obj', 'O', '[START]', '[END]']]
+        self.label_list = label[1]
 
         self.config_class = BertConfig
         self.model_class = BertCrfForNer
