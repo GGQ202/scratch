@@ -285,25 +285,27 @@ def main():
     if args.do_console_predict:
         tokenizer = tokenizer_class.from_pretrained(args.output_dir)
         model = model_class.from_pretrained("output", config=config)
-        raw_str = input("input:")
-        pred_dataset = myUtils.process_article(raw_str, args, tokenizer, 128)
-        pred_sampler = SequentialSampler(pred_dataset)
-        pred_dataloader = DataLoader(pred_dataset, sampler=pred_sampler, batch_size=1, collate_fn=collate_fn)
+        model.to(args.device)
+        while True:
+            raw_str = input("input:")
+            pred_dataset = myUtils.process_article(raw_str, args, tokenizer, 128)
+            pred_sampler = SequentialSampler(pred_dataset)
+            pred_dataloader = DataLoader(pred_dataset, sampler=pred_sampler, batch_size=1, collate_fn=collate_fn)
 
-        # predict
-        for step,batch in enumerate(pred_dataloader):
-            model.eval()
-            batch = tuple(t.to(args.device) for t in batch)
-            with torch.no_grad():
-                inputs = {"input_ids": batch[0], "attention_mask": batch[1], "labels": None}
-                inputs["token_type_ids"] = (batch[2] if args.model_type in ["bert", "xlnet"] else None)
-                outputs = model(**inputs)
-                logits = outputs[0]
-                tags = model.crf.decode(logits, inputs['attention_mask'])
-                tags = tags.squeeze(0).cpu().numpy().tolist()
-            preds = tags[0][1:-1]  # [CLS]XXXX[SEP]
-            label_entities = get_entities(preds, args.id2label, 'bios')
-            print(label_entities)
+            # predict
+            for step,batch in enumerate(pred_dataloader):
+                model.eval()
+                batch = tuple(t.to(args.device) for t in batch)
+                with torch.no_grad():
+                    inputs = {"input_ids": batch[0], "attention_mask": batch[1], "labels": None}
+                    inputs["token_type_ids"] = (batch[2] if args.model_type in ["bert", "xlnet"] else None)
+                    outputs = model(**inputs)
+                    logits = outputs[0]
+                    tags = model.crf.decode(logits, inputs['attention_mask'])
+                    tags = tags.squeeze(0).cpu().numpy().tolist()
+                preds = tags[0][1:-1]  # [CLS]XXXX[SEP]
+                label_entities = get_entities(preds, args.id2label, 'bios')
+                print(label_entities)
 
 
 
