@@ -18,7 +18,7 @@ class Args:
               'B_num', 'I_num', 'B_culture', 'I_culture', 'B_symbol', 'I_symbol',
               'B_direct', 'I_direct', 'B_func', 'I_func', 'B_act', 'I_act',
               'B_obj', 'I_obj', 'O', '[START]', '[END]']]
-        self.label_list = label[1]
+        self.label_list = label[0]
 
         self.config_class = BertConfig
         self.model_class = BertCrfForNer
