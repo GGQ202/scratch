@@ -19,19 +19,19 @@ class Args:
                             ['B_time', 'I_time', 'B_place', 'I_place', 'B_person', 'I_person',
                              'B_num', 'I_num', 'B_culture', 'I_culture', 'B_symbol', 'I_symbol',
                              'B_direct', 'I_direct', 'B_func', 'I_func', 'B_act', 'I_act',
-                             'B_obj', 'I_obj', '[START]', '[END]']
+                             'B_obj', 'I_obj', 'O', '[START]', '[END]']
 
         self.config_class = BertConfig
         self.model_class = BertCrfForNer
         self.tokenizer_class = BertTokenizer
-        self.do_train = False
+        self.do_train = True
         self.do_eval = False
         self.do_predict = False
         self.do_console_predict = True
         self.batch_size = 8
         self.num_train_epochs = None
         self.model_name_or_path = 'prev_trained_model/bert-base-chinese'
-        self.data_dir = "./datasets/cner"
+        self.data_dir = "./datasets/mydata"
         self.output_dir = "output"
         self.train_max_seq_length = 128
         self.eval_max_seq_length = 512
