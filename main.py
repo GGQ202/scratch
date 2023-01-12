@@ -246,6 +246,8 @@ def main():
 
     if args.do_train:
         train_dataset = load_and_cache_examples(args, tokenizer, data_type='train')
+        for each in train_dataset.tensors[4]:
+            print(each)
         global_step, tr_loss = train(args, train_dataset, model, tokenizer)
         if not os.path.exists(args.output_dir):
             os.mkdir(args.output_dir)

@@ -60,13 +60,13 @@ class Processor():
         pass
 
     def get_train_examples(self, data_path):
-        return self._create_example(self._read_text(os.path.join(data_path, "TEMP_train.char.bmes")), "train")
+        return self._create_example(self._read_text(os.path.join(data_path, "train.txt")), "train")
 
     def get_dev_examples(self, data_path):
-        return self._create_example(self._read_text(os.path.join(data_path, "dev.char.bmes")), "dev")
+        return self._create_example(self._read_text(os.path.join(data_path, "dev.txt")), "dev")
 
     def get_test_examples(self, data_path):
-        return self._create_example(self._read_text(os.path.join(data_path, "test.char.bmes")), "test")
+        return self._create_example(self._read_text(os.path.join(data_path, "test.txt")), "test")
 
     def _create_example(self, lines, set_type):
         examples = []

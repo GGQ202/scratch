@@ -23,7 +23,7 @@ class Args:
                  'B_test', 'B_treatment', 'I_time', 'B_time', 'I_feature',
                  'B_body', 'I_body', 'I_physiology', 'B_physiology',
                  'I_test', 'B_disease', 'I_treatment', 'I_symptom', 'O', '[START]', '[END]']]
-        self.label_list = label[0]
+        self.label_list = label[1]
 
         self.config_class = BertConfig
         self.model_class = BertCrfForNer
@@ -35,14 +35,14 @@ class Args:
         self.batch_size = 8
         self.num_train_epochs = None
         self.model_name_or_path = 'prev_trained_model/bert-base-chinese'
-        self.data_dir = "./datasets/poor_cner"
+        self.data_dir = "./datasets/mydata"
         self.output_dir = "output"
         self.train_max_seq_length = 128
         self.eval_max_seq_length = 512
         self.model_type = 'bert'
         self.max_steps = -1
         self.gradient_accumulation_steps = 1
-        self.num_train_epochs = 10
+        self.num_train_epochs = 8
 
         self.weight_decay = 0.01
         self.learning_rate = 5e-5

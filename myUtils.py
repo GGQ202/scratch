@@ -56,7 +56,7 @@ def search_labels(file_path):
     return list(dict)
 
 if __name__ == '__main__':
-    res = search_labels('datasets/NERdata/dev.char.bmes')
+    res = search_labels('datasets/NERdata/dev.txt')
     target_f = open('temp.txt', 'w')
     print(res, file=target_f)
     target_f.close()
