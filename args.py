@@ -8,21 +8,21 @@ from models.bert_for_ner import BertCrfForNer
 class Args:
     def __init__(self):
         self.platform = platform.system().lower()
-        self.no_cuda = True if self.platform=='windows' else False
+        self.no_cuda = True if self.platform == 'windows' else False
         self.device = None
         self.n_gpu = torch.cuda.device_count()
         label = [["X", 'B-CONT', 'B-EDU', 'B-LOC', 'B-NAME', 'B-ORG', 'B-PRO', 'B-RACE', 'B-TITLE',
-                'I-CONT', 'I-EDU', 'I-LOC', 'I-NAME', 'I-ORG', 'I-PRO', 'I-RACE', 'I-TITLE',
-                'O', 'S-NAME', 'S-ORG', 'S-RACE', "[START]", "[END]"],
-                ['B_time', 'I_time', 'B_place', 'I_place', 'B_person', 'I_person',
-                'B_num', 'I_num', 'B_culture', 'I_culture', 'B_symbol', 'I_symbol',
-                'B_direct', 'I_direct', 'B_func', 'I_func', 'B_act', 'I_act',
-                'B_obj', 'I_obj', 'O', '[START]', '[END]'],
-                ['I_disease', 'B_symptom', 'B_drug', 'I_crowd', 'B_crowd',
+                  'I-CONT', 'I-EDU', 'I-LOC', 'I-NAME', 'I-ORG', 'I-PRO', 'I-RACE', 'I-TITLE',
+                  'O', 'S-NAME', 'S-ORG', 'S-RACE', "[START]", "[END]"],
+                 ['B_direct', 'B_country', 'I_place', 'B_act', 'B_civ', 'I_value', 'B_relic', 'B_prof',
+                  'I_country', 'I_relic', 'I_name', 'I_prof', 'I_symbol', 'B_symbol', 'B_value', 'B_place', 'B_theory',
+                  'B_name', 'I_org', 'I_theory', 'B_org', 'I_civ', 'I_direct', 'I_act', 'B_attri', 'I_attri',
+                  'O', '[START]', '[END]'],
+                 ['I_disease', 'B_symptom', 'B_drug', 'I_crowd', 'B_crowd',
                   'B_feature', 'I_department', 'B_department', 'I_drug',
-                 'B_test', 'B_treatment', 'I_time', 'B_time', 'I_feature',
-                 'B_body', 'I_body', 'I_physiology', 'B_physiology',
-                 'I_test', 'B_disease', 'I_treatment', 'I_symptom', 'O', '[START]', '[END]']]
+                  'B_test', 'B_treatment', 'I_time', 'B_time', 'I_feature',
+                  'B_body', 'I_body', 'I_physiology', 'B_physiology',
+                  'I_test', 'B_disease', 'I_treatment', 'I_symptom', 'O', '[START]', '[END]']]
         self.label_list = label[1]
 
         self.config_class = BertConfig
