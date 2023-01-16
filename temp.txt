@@ -1,1 +1,1 @@
-['B_direct', 'B_country', 'I_place', 'B_act', 'B_civ', 'I_value', 'O', 'B_relic', 'B_prof', 'I_country', 'I_relic', 'I_name', 'I_prof', 'I_symbol', 'B_symbol', 'B_value', 'B_place', 'B_theory', 'B_name', 'I_org', 'I_theory', 'B_org', 'I_civ', 'I_direct', 'I_act', 'B_attri', 'I_attri']
+['I-CUO', 'B-RU', 'I-RU', 'B-NA', 'B-OR', 'C-AR', 'B-PL', 'I-CU', 'B-LI', 'B-CU', 'B-AC', 'I-NA', 'I-AC', 'I-AR', 'I-OR', 'B-AR', 'I-LI', 'I-PL', 'O']

@@ -22,8 +22,10 @@ class Args:
                   'B_feature', 'I_department', 'B_department', 'I_drug',
                   'B_test', 'B_treatment', 'I_time', 'B_time', 'I_feature',
                   'B_body', 'I_body', 'I_physiology', 'B_physiology',
-                  'I_test', 'B_disease', 'I_treatment', 'I_symptom', 'O', '[START]', '[END]']]
-        self.label_list = label[1]
+                  'I_test', 'B_disease', 'I_treatment', 'I_symptom', 'O', '[START]', '[END]'],
+                 ['I-CUO', 'B-RU', 'I-RU', 'B-NA', 'B-OR', 'C-AR', 'B-PL', 'I-CU', 'B-LI', 'B-CU',
+                  'B-AC', 'I-NA', 'I-AC', 'I-AR', 'I-OR', 'B-AR', 'I-LI', 'I-PL', 'O', '[START]', '[END]']]
+        self.label_list = label[3]
 
         self.config_class = BertConfig
         self.model_class = BertCrfForNer
